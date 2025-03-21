@@ -1,0 +1,8 @@
+test:
+  algoshop: 12345
+
+mysql:
+  dsn: "root:root@tcp(localhost:13316)/algoshop"
+
+redis:
+  addr: "localhost:6379"
