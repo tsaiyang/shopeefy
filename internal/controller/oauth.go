@@ -6,8 +6,8 @@ type AuthHandler struct {
 }
 
 func (handler *AuthHandler) RegisterRoutes(server *gin.Engine) {
-	group := server.Group("/auth/shopify")
-	group.POST("/authurl")
+	group := server.Group("/auth")
+	group.POST("/")
 	group.Any("/callback")
 }
 
