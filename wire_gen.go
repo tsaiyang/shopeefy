@@ -27,7 +27,12 @@ func InitWebServer() *gin.Engine {
 	userRepo := repository.NewUserRepo(userCache, userDAO)
 	userService := service.NewUserService(userRepo)
 	userHandler := controller.NewUserHandler(userService)
-	v2 := di.InitHandler(userHandler)
+	app := di.InitAlgoshopEnv()
+	shopifyStoreDAO := dao.NewShopifyStoreDAO(db)
+	shopifyStoreRepo := repository.NewShopifyStoreRepo(shopifyStoreDAO)
+	shopifyStoreService := service.NewOAuthService(shopifyStoreRepo)
+	authHandler := controller.NewAuthHandler(app, shopifyStoreService)
+	v2 := di.InitHandler(userHandler, authHandler)
 	engine := di.InitWebServer(v, v2)
 	return engine
 }

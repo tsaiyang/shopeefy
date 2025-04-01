@@ -18,21 +18,26 @@ func InitWebServer() *gin.Engine {
 		// third party
 		di.InitDB,
 		di.InitRedis,
+		di.InitAlgoshopEnv,
 
 		// dao
 		dao.NewGormUserDAO,
+		dao.NewShopifyStoreDAO,
 
 		// cache
 		cache.NewRedisUserCache,
 
 		// repository
 		repository.NewUserRepo,
+		repository.NewShopifyStoreRepo,
 
 		// service
 		service.NewUserService,
+		service.NewOAuthService,
 
 		// controller
 		controller.NewUserHandler,
+		controller.NewAuthHandler,
 
 		// server
 		di.InitMiddlewares,

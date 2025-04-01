@@ -1,12 +1,14 @@
 package di
 
 import (
-	"github.com/gin-gonic/gin"
 	"shopeefy/internal/controller"
+
+	"github.com/gin-gonic/gin"
 )
 
 func InitWebServer(middlewares []gin.HandlerFunc, handlers []controller.Handler) *gin.Engine {
 	server := gin.Default()
+	server.LoadHTMLGlob("templates/*")
 	server.Use(middlewares...)
 
 	for _, handler := range handlers {
@@ -20,6 +22,6 @@ func InitMiddlewares() []gin.HandlerFunc {
 	return nil
 }
 
-func InitHandler(userHandler *controller.UserHandler) []controller.Handler {
-	return []controller.Handler{userHandler}
+func InitHandler(userHandler *controller.UserHandler, authHandler *controller.AuthHandler) []controller.Handler {
+	return []controller.Handler{userHandler, authHandler}
 }

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://unpkg.com/@shopify/app-bridge"></script>
+  </head>
+  <body>
+    <script>
+      (function () {
+        const apiKey = "{{ .ApiKey }}";
+        const host = "{{ .Host }}";
+        const redirectUri = "{{ .RedirectUri }}";
+        console.log("redirect", redirectUri);
+
+        // 初始化 App Bridge
+        const app = window["app-bridge"].default({
+          apiKey: apiKey,
+          host: host,
+        });
+
+        // 执行重定向动作
+        const redirect = window["app-bridge"].actions.Redirect.create(app);
+        redirect.dispatch(
+          window["app-bridge"].actions.Redirect.Action.REMOTE,
+          redirectUri
+        );
+      })();
+    </script>
+    <h1>thank you very much</h1>
+  </body>
+</html>

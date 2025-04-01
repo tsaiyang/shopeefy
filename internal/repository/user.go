@@ -13,8 +13,6 @@ type userRepo struct {
 	userDAO   dao.UserDAO
 }
 
-var _ UserRepo = (*userRepo)(nil)
-
 func NewUserRepo(userCache cache.UserCache, userDAO dao.UserDAO) UserRepo {
 	return &userRepo{
 		userCache: userCache,

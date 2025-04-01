@@ -1,17 +1,18 @@
 package logger
 
 import (
+	"strconv"
+
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"strconv"
 )
 
 var Logger *zap.Logger
 
 func InitLogger() {
 	lumberjackLogger := &lumberjack.Logger{
-		Filename:   "/var/log/algoshop/app.log",
+		Filename:   "./log/algoshop/app.log",
 		MaxSize:    500,
 		MaxBackups: 3,
 		MaxAge:     30,

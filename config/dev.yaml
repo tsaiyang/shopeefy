@@ -6,3 +6,9 @@ mysql:
 
 redis:
   addr: "localhost:6379"
+
+algoshop:
+  client_id: "964fbe18a1f4f7aa2239dddbbac693e5"
+  client_secret: "5a6be8f607a010611847610b3541f153"
+  scopes: "write_products"
+  redirect_uri: "https://e99a-111-4-141-249.ngrok-free.app/auth/callback"

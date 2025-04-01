@@ -29,9 +29,5 @@ func InitDB() *gorm.DB {
 		panic(err)
 	}
 
-	if err = dao.InitTables(db); err != nil {
-		panic(err)
-	}
-
 	return db
 }
