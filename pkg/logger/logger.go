@@ -1,8 +1,6 @@
 package logger
 
 import (
-	"strconv"
-
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -28,8 +26,4 @@ func InitLogger() {
 
 	core := zapcore.NewCore(encoder, writeSyncer, zap.InfoLevel)
 	Logger = zap.New(core, zap.AddCaller())
-
-	for i := range 5000 {
-		Logger.Info("this is an info message", zap.String("key"+strconv.Itoa(i), "value"+strconv.Itoa(i)))
-	}
 }
