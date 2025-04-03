@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大衣柜app</title>
+    <link rel="stylesheet" href="http://apps.bdimg.com/libs/bootstrap/3.2.0/css/bootstrap.min.css">
+    <script src="http://apps.bdimg.com/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="http://apps.bdimg.com/libs/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <style>
+        .header {
+            background-color: #333;
+            padding: 10px;
+            text-align: center;
+            color: #fff;
+            margin-top: 2px;
+        }
+
+        .product {
+            background-color: blue;
+        }
+
+        .user {
+            background-color: orange;
+        }
+
+        .order {
+            background-color: green;
+        }
+
+        .title {
+            font-size: 26px;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            margin-top: 2px;
+        }
+
+        .title a {
+            color: #fff;
+        }
+
+        .charge {
+            border: 1px solid #ccc;
+            padding: 4px;
+            margin-top: 4px;
+        }
+
+        input {
+            margin-top: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="column header">
+                <h3>大衣柜app</h3>
+            </div>
+        </div>
+        <div class="row">
+            <div class="column title product">
+                <a href="{{.Url}}" target="_blank">商品列表</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="column  title user">
+                <a href="#">用户列表</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="column  title order">
+                <a href="#">订单列表</a>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="column">
+                <form class="charge" method="post">
+                    <div class="form-group">
+                        <label for="price">充值金额</label>
+                        <input type="text" class="form-control" name="price" placeholder="请输入充值金额">
+                        <input type="submit" class="btn" value="提交">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

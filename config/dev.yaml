@@ -10,5 +10,7 @@ redis:
 algoshop:
   client_id: "964fbe18a1f4f7aa2239dddbbac693e5"
   client_secret: "5a6be8f607a010611847610b3541f153"
-  scopes: "write_products"
-  redirect_uri: "https://e99a-111-4-141-249.ngrok-free.app/auth/callback"
+  client_name: "shopeeeee"
+  client_handle: "shopeeeee-1"
+  scopes: "write_products,read_products,write_customers,read_customers,write_orders,read_orders,write_script_tags,read_script_tags"
+  redirect_uri: "https://2782-45-78-196-121.ngrok-free.app/auth/callback"

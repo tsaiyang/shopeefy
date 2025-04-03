@@ -1,6 +1,8 @@
 package di
 
 import (
+	"shopeefy/config"
+
 	goshopify "github.com/bold-commerce/go-shopify/v4"
 	"github.com/spf13/viper"
 )
@@ -12,19 +14,25 @@ type AlgoshopEnv struct {
 	ClientSecret string `mapstructure:"client_secret"`
 	RedirectUri  string `mapstructure:"redirect_uri"`
 	Scopes       string `mapstructure:"scopes"`
+	ClientName   string `mapstructure:"client_name"`
+	ClientHandle string `mapstructure:"client_handle"`
 }
 
-func InitAlgoshopEnv() *goshopify.App {
+func InitAlgoshopEnv() *config.ShopifyApp {
 	var env AlgoshopEnv
 	if err := viper.UnmarshalKey(algoshopKey, &env); err != nil {
 		panic(err)
 	}
 
-	app := goshopify.App{
-		ApiKey:      env.ClientId,
-		ApiSecret:   env.ClientSecret,
-		RedirectUrl: env.RedirectUri,
-		Scope:       env.Scopes,
+	app := config.ShopifyApp{
+		App: goshopify.App{
+			ApiKey:      env.ClientId,
+			ApiSecret:   env.ClientSecret,
+			Scope:       env.Scopes,
+			RedirectUrl: env.RedirectUri,
+		},
+		ClientName:   env.ClientName,
+		ClientHandle: env.ClientHandle,
 	}
 
 	return &app

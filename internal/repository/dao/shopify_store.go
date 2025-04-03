@@ -34,7 +34,7 @@ func (dao *gormShopifyStoreDAO) CreateStore(ctx context.Context, store ShopifySt
 }
 
 func (dao *gormShopifyStoreDAO) FindStoreyDomain(ctx context.Context, domain string) (store ShopifyStore, err error) {
-	err = dao.db.WithContext(ctx).Where("shopify_store_domain = ?", domain).First(&store).Error
+	err = dao.db.WithContext(ctx).Where("shopify_store_domain = ? AND uninstalled = ?", domain, false).First(&store).Error
 	return
 }
 

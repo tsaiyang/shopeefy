@@ -2,14 +2,19 @@ package controller
 
 import (
 	"fmt"
-	goshopify "github.com/bold-commerce/go-shopify/v4"
+	"net/http"
+	"shopeefy/config"
+	"shopeefy/internal/model"
+	"shopeefy/internal/service"
+	"shopeefy/pkg/logger"
+	"strings"
+
 	regexp "github.com/dlclark/regexp2"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	uuid "github.com/lithammer/shortuuid/v4"
-	"net/http"
-	"shopeefy/internal/model"
-	"shopeefy/internal/service"
+	"go.uber.org/zap"
 )
 
 const (
@@ -31,12 +36,12 @@ const (
 
 type AuthHandler struct {
 	shopifyStoreService service.ShopifyStoreService
-	app                 *goshopify.App
+	app                 *config.ShopifyApp
 	stateCookieName     string
 	shopNameRegExp      *regexp.Regexp
 }
 
-func NewAuthHandler(app *goshopify.App, shopifyStoreService service.ShopifyStoreService) *AuthHandler {
+func NewAuthHandler(app *config.ShopifyApp, shopifyStoreService service.ShopifyStoreService) *AuthHandler {
 	return &AuthHandler{
 		shopifyStoreService: shopifyStoreService,
 		app:                 app,
@@ -63,6 +68,13 @@ func (handler *AuthHandler) Auth2Url(ctx *gin.Context) {
 		return
 	}
 
+	// 先查看商家的 access_token 是否存在
+	accessToken, err := handler.shopifyStoreService.GetAccessTokenByDomain(ctx, shop)
+	if err == nil && len(accessToken) > 0 {
+		ctx.HTML(http.StatusOK, "index.html", gin.H{})
+		return
+	}
+
 	nonce := uuid.New()
 	authUrl, err := handler.app.AuthorizeUrl(shop, nonce)
 	if err != nil {
@@ -70,8 +82,18 @@ func (handler *AuthHandler) Auth2Url(ctx *gin.Context) {
 		return
 	}
 
-	// 非嵌入式的 app，直接重定向到授权页面
+	// 非嵌入式的 app，直接重定向到授权页面，这个暂时不用看，因为咱现在的 app 都是嵌入式的
 	if ctx.Query("embedded") != "1" {
+		ok, err := handler.app.VerifyAuthorizationURL(ctx.Request.URL)
+		if err != nil {
+			ctx.JSON(http.StatusOK, Result{Code: serverErrCode, Msg: httpRespVerifyAuthUrlFailed})
+			return
+		}
+		if !ok {
+			ctx.JSON(http.StatusOK, Result{Code: serverErrCode, Msg: httpRespInvalidParams})
+			return
+		}
+
 		if err = handler.setStateCookie(ctx, nonce); err != nil {
 			ctx.JSON(http.StatusOK, Result{Code: serverErrCode, Msg: httpRespSystemError})
 			return
@@ -92,7 +114,7 @@ func (handler *AuthHandler) Auth2Url(ctx *gin.Context) {
 			return
 		}
 
-		redirectUri := fmt.Sprintf("https://%s%s?shop=%s&escape=1", ctx.Request.Host, ctx.Request.URL.Path, shop)
+		redirectUri := fmt.Sprintf("https://%s%s?shop=%s&escape=1&embedded=1", ctx.Request.Host, ctx.Request.URL.Path, shop)
 		ctx.HTML(http.StatusOK, "escape_iframe.html", gin.H{
 			"ApiKey":      handler.app.ApiKey,
 			"Host":        ctx.Query("host"),
@@ -138,12 +160,9 @@ func (handler *AuthHandler) Callback(ctx *gin.Context) {
 	}
 
 	code := ctx.Query("code")
-	//accessToken, err := handler.app.GetAccessToken(ctx, shop, code)
-	fmt.Println("shop: ", shop)
-	fmt.Println("code: ", code)
 	accessToken, err := handler.app.GetAccessToken(ctx, shop, code)
 	if err != nil {
-		fmt.Println(err)
+		logger.Logger.Error("fail to get access token", zap.String("shop: ", shop), zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{Code: serverErrCode, Msg: httpRespFailToFetchAccessToken})
 		return
 	}
@@ -159,10 +178,14 @@ func (handler *AuthHandler) Callback(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"shop":         shop,
-		"access_token": accessToken,
-	})
+	sess := sessions.Default(ctx)
+	sess.Set("shop_id", shop)
+	_ = sess.Save()
+
+	shopName := strings.Split(shop, ".")[0]
+	redirectUrl := fmt.Sprintf("https://admin.shopify.com/store/%s/apps/%s", shopName, handler.app.ClientHandle)
+
+	ctx.Redirect(http.StatusFound, redirectUrl)
 }
 
 func (handler *AuthHandler) VerifyState(ctx *gin.Context) error {
@@ -202,47 +225,3 @@ type StateClaims struct {
 	jwt.RegisteredClaims
 	State string
 }
-
-//func (handler *AuthHandler) exchangeToken(shop, code string) (string, error) {
-//	client := &http.Client{}
-//	reqURL := fmt.Sprintf("https://%s/admin/oauth/access_token", shop)
-//
-//	body := strings.NewReader(fmt.Sprintf(
-//		"client_id=%s&client_secret=%s&code=%s",
-//		handler.app.ApiKey,
-//		handler.app.ApiSecret,
-//		code,
-//	))
-//
-//	req, _ := http.NewRequest("POST", reqURL, body)
-//	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-//
-//	resp, err := client.Do(req)
-//	if err != nil {
-//		return "", err
-//	}
-//	defer func() { _ = resp.Body.Close() }()
-//
-//	if resp.StatusCode != http.StatusOK {
-//		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-//	}
-//
-//	respBody, _ := io.ReadAll(resp.Body)
-//
-//	// 解析响应获取access_token（需要实现具体的JSON解析）
-//	return parseAccessToken(respBody), nil
-//}
-//
-//func parseAccessToken(data []byte) string {
-//	type Token struct {
-//		AccessToken string `json:"access_token"`
-//		Scope       string `json:"scope"`
-//	}
-//
-//	var token Token
-//	if err := json.Unmarshal(data, &token); err != nil {
-//		return ""
-//	} else {
-//		return token.AccessToken
-//	}
-//}
