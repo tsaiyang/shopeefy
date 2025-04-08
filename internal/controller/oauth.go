@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"shopeefy/config"
+	"shopeefy/internal/service"
 	"shopeefy/pkg/logger"
 	"strings"
 
@@ -36,13 +37,15 @@ type AuthHandler struct {
 	app             *config.ShopifyApp
 	stateCookieName string
 	shopNameRegExp  *regexp.Regexp
+	shopService     service.ShopService
 }
 
-func NewAuthHandler(app *config.ShopifyApp) *AuthHandler {
+func NewAuthHandler(app *config.ShopifyApp, shopService service.ShopService) *AuthHandler {
 	return &AuthHandler{
 		app:             app,
 		stateCookieName: "jwt-state",
 		shopNameRegExp:  regexp.MustCompile(shopNameRegExp, regexp.None),
+		shopService:     shopService,
 	}
 }
 
@@ -65,6 +68,13 @@ func (handler *AuthHandler) Auth2Url(ctx *gin.Context) {
 	}
 
 	// TODO:先查看商家的 access_token 是否存在
+	_, err = handler.shopService.GetAccessTokenByShopName(ctx, shop)
+	if err == nil {
+		ctx.HTML(http.StatusFound, "index.html", gin.H{
+			"Url": "https://www.baidu.com",
+		})
+		return
+	}
 
 	nonce := uuid.New()
 	authUrl, err := handler.app.AuthorizeUrl(shop, nonce)
@@ -134,7 +144,7 @@ func (handler *AuthHandler) Callback(ctx *gin.Context) {
 		return
 	}
 
-	if err := handler.VerifyState(ctx); err != nil {
+	if err = handler.VerifyState(ctx); err != nil {
 		ctx.JSON(http.StatusOK, Result{Code: clientErrCode, Msg: httpRespInvalidRequest})
 		return
 	}

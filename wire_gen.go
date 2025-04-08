@@ -10,6 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"shopeefy/di"
 	"shopeefy/internal/controller"
+	"shopeefy/internal/repository"
+	"shopeefy/internal/repository/dao"
+	"shopeefy/internal/service"
 )
 
 // Injectors from wire.go:
@@ -17,7 +20,11 @@ import (
 func InitWebServer() *gin.Engine {
 	v := di.InitMiddlewares()
 	shopifyApp := di.InitShopifyAppEnv()
-	authHandler := controller.NewAuthHandler(shopifyApp)
+	db := di.InitDB()
+	shopDAO := dao.NewShopDAO(db)
+	shopRepo := repository.NewShopRepo(shopDAO)
+	shopService := service.NewShopService(shopRepo)
+	authHandler := controller.NewAuthHandler(shopifyApp, shopService)
 	v2 := di.InitHandler(authHandler)
 	engine := di.InitWebServer(v, v2)
 	return engine
