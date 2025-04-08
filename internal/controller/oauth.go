@@ -50,8 +50,8 @@ func NewAuthHandler(app *config.ShopifyApp, shopService service.ShopService) *Au
 	}
 }
 
-func (handler *AuthHandler) RegisterRoutes(server *gin.Engine) {
-	group := server.Group("/auth")
+func (handler *AuthHandler) RegisterRoutes(router gin.IRouter) {
+	group := router.Group("/auth")
 	group.GET("/auth", handler.Auth2Url)
 	group.GET("/callback", handler.Callback)
 }

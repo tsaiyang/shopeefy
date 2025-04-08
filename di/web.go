@@ -13,10 +13,12 @@ import (
 func InitWebServer(middlewares []gin.HandlerFunc, handlers []controller.Handler) *gin.Engine {
 	server := gin.Default()
 	server.LoadHTMLGlob("templates/*")
-	server.Use(middlewares...)
+
+	v1 := server.Group("/api/v1")
+	v1.Use(middlewares...)
 
 	for _, handler := range handlers {
-		handler.RegisterRoutes(server)
+		handler.RegisterRoutes(v1)
 	}
 
 	return server
