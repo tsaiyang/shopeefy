@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"shopeefy/config"
+	"shopeefy/internal/model"
 	"shopeefy/internal/service"
 	"shopeefy/pkg/logger"
 	"strings"
@@ -161,7 +162,7 @@ func (handler *AuthHandler) Callback(ctx *gin.Context) {
 	}
 
 	code := ctx.Query("code")
-	_, err = handler.app.GetAccessToken(ctx, shop, code)
+	accessToken, err := handler.app.GetAccessToken(ctx, shop, code)
 	if err != nil {
 		logger.Logger.Error("fail to get access token", zap.String("shop: ", shop), zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{Code: serverErrCode, Msg: httpRespFailToFetchAccessToken})
@@ -169,6 +170,15 @@ func (handler *AuthHandler) Callback(ctx *gin.Context) {
 	}
 
 	// TODO 保存 access token 到数据库
+	if err = handler.shopService.SaveAccessToken(ctx, model.Shop{
+		Name:        shop,
+		AccessToken: accessToken,
+		IsActive:    true,
+		Scope:       handler.app.Scope,
+	}); err != nil {
+		ctx.JSON(http.StatusOK, Result{Code: serverErrCode, Msg: httpRespSystemError})
+		return
+	}
 
 	shopSession := ctx.Query("session")
 	sess := sessions.Default(ctx)
