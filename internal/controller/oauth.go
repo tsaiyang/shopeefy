@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"shopeefy/config"
-	"shopeefy/internal/model"
-	"shopeefy/internal/service"
 	"shopeefy/pkg/logger"
 	"strings"
 
@@ -35,18 +33,16 @@ const (
 )
 
 type AuthHandler struct {
-	shopifyStoreService service.ShopifyStoreService
-	app                 *config.ShopifyApp
-	stateCookieName     string
-	shopNameRegExp      *regexp.Regexp
+	app             *config.ShopifyApp
+	stateCookieName string
+	shopNameRegExp  *regexp.Regexp
 }
 
-func NewAuthHandler(app *config.ShopifyApp, shopifyStoreService service.ShopifyStoreService) *AuthHandler {
+func NewAuthHandler(app *config.ShopifyApp) *AuthHandler {
 	return &AuthHandler{
-		shopifyStoreService: shopifyStoreService,
-		app:                 app,
-		stateCookieName:     "jwt-state",
-		shopNameRegExp:      regexp.MustCompile(shopNameRegExp, regexp.None),
+		app:             app,
+		stateCookieName: "jwt-state",
+		shopNameRegExp:  regexp.MustCompile(shopNameRegExp, regexp.None),
 	}
 }
 
@@ -68,12 +64,7 @@ func (handler *AuthHandler) Auth2Url(ctx *gin.Context) {
 		return
 	}
 
-	// 先查看商家的 access_token 是否存在
-	accessToken, err := handler.shopifyStoreService.GetAccessTokenByDomain(ctx, shop)
-	if err == nil && len(accessToken) > 0 {
-		ctx.HTML(http.StatusOK, "index.html", gin.H{})
-		return
-	}
+	// TODO:先查看商家的 access_token 是否存在
 
 	nonce := uuid.New()
 	authUrl, err := handler.app.AuthorizeUrl(shop, nonce)
@@ -160,26 +151,18 @@ func (handler *AuthHandler) Callback(ctx *gin.Context) {
 	}
 
 	code := ctx.Query("code")
-	accessToken, err := handler.app.GetAccessToken(ctx, shop, code)
+	_, err = handler.app.GetAccessToken(ctx, shop, code)
 	if err != nil {
 		logger.Logger.Error("fail to get access token", zap.String("shop: ", shop), zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{Code: serverErrCode, Msg: httpRespFailToFetchAccessToken})
 		return
 	}
 
-	// 保存 access token 到数据库
-	if err = handler.shopifyStoreService.CreateStore(ctx, model.ShopifyStore{
-		AccessToken: accessToken,
-		AppKey:      handler.app.ApiKey,
-		Domain:      shop,
-		Scopes:      handler.app.Scope,
-	}); err != nil {
-		ctx.JSON(http.StatusOK, Result{Code: serverErrCode, Msg: httpRespSystemError})
-		return
-	}
+	// TODO 保存 access token 到数据库
 
+	shopSession := ctx.Query("session")
 	sess := sessions.Default(ctx)
-	sess.Set("shop_id", shop)
+	sess.Set(shopSession, shop)
 	_ = sess.Save()
 
 	shopName := strings.Split(shop, ".")[0]

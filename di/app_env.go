@@ -9,7 +9,7 @@ import (
 
 const algoshopKey = "algoshop"
 
-type AlgoshopEnv struct {
+type AppEnv struct {
 	ClientId     string `mapstructure:"client_id"`
 	ClientSecret string `mapstructure:"client_secret"`
 	RedirectUri  string `mapstructure:"redirect_uri"`
@@ -18,8 +18,8 @@ type AlgoshopEnv struct {
 	ClientHandle string `mapstructure:"client_handle"`
 }
 
-func InitAlgoshopEnv() *config.ShopifyApp {
-	var env AlgoshopEnv
+func InitShopifyAppEnv() *config.ShopifyApp {
+	var env AppEnv
 	if err := viper.UnmarshalKey(algoshopKey, &env); err != nil {
 		panic(err)
 	}

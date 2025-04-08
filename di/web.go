@@ -26,8 +26,8 @@ func InitMiddlewares() []gin.HandlerFunc {
 	return []gin.HandlerFunc{sessionMiddleware()}
 }
 
-func InitHandler(userHandler *controller.UserHandler, authHandler *controller.AuthHandler) []controller.Handler {
-	return []controller.Handler{userHandler, authHandler}
+func InitHandler(authHandler *controller.AuthHandler) []controller.Handler {
+	return []controller.Handler{authHandler}
 }
 
 func sessionMiddleware() gin.HandlerFunc {

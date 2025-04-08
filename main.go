@@ -25,7 +25,4 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
 	}
-
-	val := viper.Get("test.algoshop")
-	log.Println(val)
 }

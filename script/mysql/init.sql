@@ -1,1 +1,1 @@
-create database algoshop;
+create database if not exists algoshop;
