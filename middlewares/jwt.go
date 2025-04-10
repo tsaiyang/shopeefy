@@ -2,14 +2,14 @@ package middlewares
 
 import "github.com/gin-gonic/gin"
 
-type JwtBuilder struct {
+type JwtSessionBuilder struct {
 }
 
-func NewJwtBuilder() *JwtBuilder {
-	return &JwtBuilder{}
+func NewJwtBuilder() *JwtSessionBuilder {
+	return &JwtSessionBuilder{}
 }
 
-func (builder *JwtBuilder) Build() gin.HandlerFunc {
+func (builder *JwtSessionBuilder) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 	}
 }

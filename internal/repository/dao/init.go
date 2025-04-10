@@ -3,5 +3,7 @@ package dao
 import "gorm.io/gorm"
 
 func InitTables(db *gorm.DB) error {
-	return db.AutoMigrate(&Shop{})
+	return db.AutoMigrate(
+		&Shop{},
+	)
 }

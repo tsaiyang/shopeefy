@@ -22,8 +22,8 @@ const (
 )
 
 const (
-	clientErrCode = 4
-	serverErrCode = 5
+	clientErrCode = 400
+	serverErrCode = 500
 
 	httpRespInvalidShopName        = "invalid shop name"
 	httpRespSpliceAuthUrlFail      = "fail to splice auth url"
