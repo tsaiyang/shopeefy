@@ -18,8 +18,8 @@ import (
 // Injectors from wire.go:
 
 func InitWebServer() *gin.Engine {
-	v := di.InitMiddlewares()
 	shopifyApp := di.InitShopifyAppEnv()
+	v := di.InitMiddlewares(shopifyApp)
 	db := di.InitDB()
 	shopDAO := dao.NewShopDAO(db)
 	shopRepo := repository.NewShopRepo(shopDAO)

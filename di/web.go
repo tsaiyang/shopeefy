@@ -1,7 +1,9 @@
 package di
 
 import (
+	"shopeefy/config"
 	"shopeefy/internal/controller"
+	"shopeefy/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,8 +22,9 @@ func InitWebServer(middlewares []gin.HandlerFunc, handlers []controller.Handler)
 	return server
 }
 
-func InitMiddlewares() []gin.HandlerFunc {
-	return []gin.HandlerFunc{}
+func InitMiddlewares(app *config.ShopifyApp) []gin.HandlerFunc {
+	jwtBuilder := middlewares.NewJwtSessionBuilder(app)
+	return []gin.HandlerFunc{jwtBuilder.Build()}
 }
 
 func InitHandler(authHandler *controller.AuthHandler) []controller.Handler {

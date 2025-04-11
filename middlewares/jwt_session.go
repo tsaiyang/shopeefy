@@ -1,12 +1,24 @@
 package middlewares
 
 import (
+	"errors"
+	"fmt"
+	"net/http"
 	"shopeefy/config"
+	"shopeefy/pkg/logger"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"go.uber.org/zap"
+)
+
+var (
+	ErrTokenExpired     = errors.New("token expired")
+	ErrTokenNotAffected = errors.New("token not affected")
+	ErrTokenInvalidAud  = errors.New("token invalid aud")
 )
 
 type JwtSessionBuilder struct {
@@ -33,8 +45,54 @@ func (builder *JwtSessionBuilder) Build() gin.HandlerFunc {
 			return
 		}
 
-		// tokenStr := extraToken(ctx)
+		tokenStr := extraToken(ctx)
+
+		var sc SessionClaims
+		parserOptions := []jwt.ParserOption{
+			jwt.WithoutClaimsValidation(),
+		}
+		token, err := jwt.ParseWithClaims(tokenStr, &sc, func(t *jwt.Token) (any, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("invalid signature: %v", t.Header["alg"])
+			}
+
+			return []byte(builder.app.ApiSecret), nil
+		}, parserOptions...)
+		if err != nil {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		if token == nil || !token.Valid {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		if err = builder.verifySessionClaims(&sc); err != nil {
+			logger.Logger.Error("fail to verify session claims", zap.Error(err))
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		ctx.Set("shop", sc.Dest)
 	}
+}
+
+func (builder *JwtSessionBuilder) verifySessionClaims(claims *SessionClaims) error {
+	now := time.Now().Unix()
+	if claims.Exp < now {
+		return ErrTokenExpired
+	}
+	if now < claims.Nbf {
+		return ErrTokenNotAffected
+	}
+	if claims.Aud != builder.app.ApiKey {
+		return ErrTokenInvalidAud
+	}
+	if !strings.Contains(claims.Iss, ".myshopify.com/admin") {
+		return fmt.Errorf("无效的 iss 值: %s", claims.Iss)
+	}
+
+	return nil
 }
 
 func extraToken(ctx *gin.Context) string {
