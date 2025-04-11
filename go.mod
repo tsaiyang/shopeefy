@@ -5,10 +5,10 @@ go 1.24.1
 require (
 	github.com/bold-commerce/go-shopify/v4 v4.7.0
 	github.com/dlclark/regexp2 v1.11.5
-	github.com/gin-contrib/sessions v1.0.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/wire v0.6.0
+	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/lithammer/shortuuid/v4 v4.2.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/redis/go-redis/v9 v9.7.3
@@ -36,9 +36,6 @@ require (
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gorilla/context v1.1.2 // indirect
-	github.com/gorilla/securecookie v1.1.2 // indirect
-	github.com/gorilla/sessions v1.4.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

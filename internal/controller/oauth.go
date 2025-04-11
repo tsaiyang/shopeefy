@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	regexp "github.com/dlclark/regexp2"
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	uuid "github.com/lithammer/shortuuid/v4"
@@ -32,6 +31,10 @@ const (
 	httpRespSystemError            = "system error"
 	httpRespInvalidRequest         = "invalid request"
 	httpRespFailToFetchAccessToken = "fail to fetch access token"
+)
+
+const (
+	apiCallback =  "/api/v1/auth/callback"
 )
 
 type AuthHandler struct {
@@ -68,9 +71,11 @@ func (handler *AuthHandler) Auth2Url(ctx *gin.Context) {
 		return
 	}
 
-	// TODO:先查看商家的 access_token 是否存在
-	_, err = handler.shopService.GetAccessTokenByShopName(ctx, shop)
-	if err == nil {
+	// 应该不存在或者过期了，但是目前拿到的 access_token 是 offline 模式，没有过期时间，所以暂时不校验是否过期
+	// 未来 access_token 可能是 online 模式，到时候再说
+	accessToken, err := handler.shopService.GetAccessTokenByShopName(ctx, shop)
+	if err == nil && len(accessToken) > 0 {
+		// 这里应该是返回到咱们的首页
 		ctx.HTML(http.StatusFound, "index.html", gin.H{
 			"Url": "https://www.baidu.com",
 		})
@@ -131,6 +136,7 @@ func (handler *AuthHandler) Auth2Url(ctx *gin.Context) {
 		return
 	}
 
+	fmt.Println(authUrl)
 	ctx.Redirect(http.StatusFound, authUrl)
 }
 
@@ -141,11 +147,13 @@ func (handler *AuthHandler) Callback(ctx *gin.Context) {
 		return
 	}
 	if !validUrl {
-		ctx.JSON(http.StatusOK, Result{Code: serverErrCode, Msg: httpRespInvalidParams})
+		logger.Logger.Error("invalid url", zap.Any("ctx.Request.URL", ctx.Request.URL))
+		ctx.JSON(http.StatusOK, Result{Code: clientErrCode, Msg: httpRespInvalidParams})
 		return
 	}
 
 	if err = handler.VerifyState(ctx); err != nil {
+		logger.Logger.Error("fail to verify state", zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{Code: clientErrCode, Msg: httpRespInvalidRequest})
 		return
 	}
@@ -169,7 +177,6 @@ func (handler *AuthHandler) Callback(ctx *gin.Context) {
 		return
 	}
 
-	// TODO 保存 access token 到数据库
 	if err = handler.shopService.SaveAccessToken(ctx, model.Shop{
 		Name:        shop,
 		AccessToken: accessToken,
@@ -180,11 +187,6 @@ func (handler *AuthHandler) Callback(ctx *gin.Context) {
 		return
 	}
 
-	shopSession := ctx.Query("session")
-	sess := sessions.Default(ctx)
-	sess.Set(shopSession, shop)
-	_ = sess.Save()
-
 	shopName := strings.Split(shop, ".")[0]
 	redirectUrl := fmt.Sprintf("https://admin.shopify.com/store/%s/apps/%s", shopName, handler.app.ClientHandle)
 
@@ -193,6 +195,7 @@ func (handler *AuthHandler) Callback(ctx *gin.Context) {
 
 func (handler *AuthHandler) VerifyState(ctx *gin.Context) error {
 	stateCookie, err := ctx.Cookie(handler.stateCookieName)
+	fmt.Println(stateCookie)
 	if err != nil {
 		return fmt.Errorf("can't get state cookie %w", err)
 	}
@@ -220,7 +223,7 @@ func (handler *AuthHandler) setStateCookie(ctx *gin.Context, state string) error
 		return err
 	}
 
-	ctx.SetCookie(handler.stateCookieName, tokenString, 3600, "/auth/callback", "", false, true)
+	ctx.SetCookie(handler.stateCookieName, tokenString, 3600, apiCallback, "", false, true)
 	return nil
 }
 

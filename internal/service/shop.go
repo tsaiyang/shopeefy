@@ -20,7 +20,6 @@ type shopService struct {
 	shopRepo repository.ShopRepo
 }
 
-// FindAccessTokenByShopName implements ShopService.
 func (service *shopService) GetAccessTokenByShopName(ctx context.Context, shopName string) (string, error) {
 	shop, err := service.shopRepo.FindByName(ctx, shopName)
 	if err != nil {
